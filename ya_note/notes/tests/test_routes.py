@@ -11,7 +11,9 @@ class TestRoutes(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.author = get_user_model().objects.create_user(username='Автор')
-        cls.not_author = get_user_model().objects.create_user(username='Не автор')
+        cls.not_author = get_user_model().objects.create_user(
+            username='Не автор'
+        )
         cls.note = Note.objects.create(
             title='Заголовок',
             text='Текст заметки',
@@ -49,7 +51,11 @@ class TestRoutes(TestCase):
     def test_logout_post_redirect(self):
         url = reverse('users:logout')
         response = self.client.post(url)
-        self.assertIn(response.status_code, (HTTPStatus.OK, HTTPStatus.FOUND, HTTPStatus.SEE_OTHER))
+        self.assertIn(
+            response.status_code, (
+                HTTPStatus.OK, HTTPStatus.FOUND, HTTPStatus.SEE_OTHER
+            )
+        )
 
     def test_pages_availability_for_authenticated_user(self):
         url_names = ('notes:list', 'notes:add', 'notes:success')

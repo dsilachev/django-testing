@@ -1,4 +1,3 @@
-import unittest
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth import get_user_model
@@ -7,6 +6,7 @@ from notes.models import Note
 from notes.forms import NoteForm
 
 User = get_user_model()
+
 
 class TestContent(TestCase):
     @classmethod

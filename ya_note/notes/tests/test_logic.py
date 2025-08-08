@@ -12,8 +12,12 @@ User = get_user_model()
 
 class TestLogic(TestCase):
     def setUp(self):
-        self.author = User.objects.create_user(username='author', password='pass')
-        self.not_author = User.objects.create_user(username='not-author', password='pass')
+        self.author = User.objects.create_user(
+            username='author', password='pass'
+        )
+        self.not_author = User.objects.create_user(
+            username='not-author', password='pass'
+        )
 
         self.author_client = Client()
         self.author_client.force_login(self.author)
@@ -71,7 +75,9 @@ class TestLogic(TestCase):
             'title': 'zagolovok',
             'text': 'text',
         }
-        response = self.author_client.post(reverse('notes:add'), data=form_data)
+        response = self.author_client.post(
+            reverse('notes:add'), data=form_data
+        )
         self.assertRedirects(response, reverse('notes:success'))
         self.assertEqual(Note.objects.count(), 1)
         new_note = Note.objects.get()

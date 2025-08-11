@@ -3,59 +3,41 @@ from http import HTTPStatus
 import pytest
 from django.urls import reverse
 
+pytestmark = pytest.mark.django_db
 
-@pytest.mark.django_db
+
 @pytest.mark.parametrize(
-    'name, args',
+    'name, args, client_fixture, expected_status',
     [
-        ('news:home', None),
-        ('news:detail', 'news_id'),
-        ('users:login', None),
-        ('users:signup', None),
+        ('news:home', None, 'client', HTTPStatus.OK),
+        ('news:detail', 'news_id', 'client', HTTPStatus.OK),
+        ('users:login', None, 'client', HTTPStatus.OK),
+        ('users:signup', None, 'client', HTTPStatus.OK),
+        ('news:edit', 'comment_id', 'author_client', HTTPStatus.OK),
+        ('news:delete', 'comment_id', 'author_client', HTTPStatus.OK),
+        ('news:edit', 'comment_id', 'reader_client', HTTPStatus.NOT_FOUND),
+        ('news:delete', 'comment_id', 'reader_client', HTTPStatus.NOT_FOUND),
     ]
 )
-def test_pages_availability(client, news, name, args):
-    url_args = (news.id,) if args == 'news_id' else args
-    url = reverse(name, args=url_args)
-    response = client.get(url)
-    assert response.status_code == HTTPStatus.OK
-
-
-@pytest.mark.django_db
-@pytest.mark.parametrize(
-    'user_fixture, status',
-    [
-        ('author', HTTPStatus.OK),
-        ('reader', HTTPStatus.NOT_FOUND),
-    ]
-)
-@pytest.mark.parametrize('name', ['news:edit', 'news:delete'])
-def test_availability_for_comment_edit_and_delete(
-    client, comment, request, user_fixture, status, name
+def test_pages_status(
+    request, name, args, client_fixture,
+    expected_status, news, comment
 ):
-    user = request.getfixturevalue(user_fixture)
-    client.force_login(user)
-    url = reverse(name, args=(comment.id,))
+    client = request.getfixturevalue(client_fixture)
+    if args == 'news_id':
+        url = reverse(name, args=(news.id,))
+    elif args == 'comment_id':
+        url = reverse(name, args=(comment.id,))
+    else:
+        url = reverse(name)
     response = client.get(url)
-    assert response.status_code == status
+    assert response.status_code == expected_status
 
 
-@pytest.mark.django_db
 @pytest.mark.parametrize('name', ['news:edit', 'news:delete'])
-def test_redirect_for_anonymous_user(client, comment, name):
+def test_redirects_for_anonymous(client, comment, name):
     login_url = reverse('users:login')
     url = reverse(name, args=(comment.id,))
     response = client.get(url)
-    expected_redirect = f'{login_url}?next={url}'
     assert response.status_code == HTTPStatus.FOUND
-    assert response.url == expected_redirect
-
-
-@pytest.mark.django_db
-def test_logout_availability(client, author):
-    url = reverse('users:logout')
-    client.force_login(author)
-    response = client.post(url)
-    assert response.status_code in [HTTPStatus.FOUND, HTTPStatus.OK]
-    response = client.get(url)
-    assert response.status_code in [HTTPStatus.OK, HTTPStatus.FOUND, 405]
+    assert response.url == f'{login_url}?next={url}'

@@ -1,94 +1,54 @@
 import pytest
 from django.contrib.auth import get_user_model
 from django.urls import reverse
-from django.utils import timezone
-from datetime import timedelta
+from django.conf import settings
 
 from news.forms import CommentForm
-from news.models import Comment, News
 
 User = get_user_model()
 
+pytestmark = pytest.mark.django_db
 
-@pytest.mark.django_db
-def test_news_count_on_home_page(client):
-    for i in range(15):
-        News.objects.create(
-            title=f'Новость {i}',
-            text=f'Текст новости {i}'
-        )
-    url = reverse('news:home')
-    response = client.get(url)
+
+@pytest.fixture
+def home_url():
+    return reverse('news:home')
+
+
+@pytest.fixture
+def news_detail_url(news):
+    return reverse('news:detail', args=(news.id,))
+
+
+def test_news_count_on_home_page(client, multiple_news, home_url):
+    response = client.get(home_url)
     object_list = response.context['object_list']
-    assert len(object_list) == 10
+    assert object_list.count() == settings.NEWS_COUNT_ON_HOME_PAGE
 
 
-@pytest.mark.django_db
-def test_news_order_on_home_page(client):
-    now = timezone.now()
-    old_news = News.objects.create(
-        title='Старая новость',
-        text='Текст старой новости',
-        date=now - timedelta(days=2)
-    )
-    middle_news = News.objects.create(
-        title='Средняя новость',
-        text='Текст средней новости',
-        date=now - timedelta(days=1)
-    )
-    fresh_news = News.objects.create(
-        title='Свежая новость',
-        text='Текст свежей новости',
-        date=now
-    )
-    url = reverse('news:home')
-    response = client.get(url)
-    object_list = response.context['object_list']
-    assert object_list[0] == fresh_news
-    assert object_list[1] == middle_news
-    assert object_list[2] == old_news
+def test_news_order_on_home_page(client, multiple_news, home_url):
+    response = client.get(home_url)
+    object_list = list(response.context['object_list'])
+    sorted_list = sorted(object_list, key=lambda n: n.date, reverse=True)
+    assert object_list == sorted_list
 
 
-@pytest.mark.django_db
-def test_comments_order_on_news_detail_page(client, news, author, reader):
-    now = timezone.now()
-    old_comment = Comment.objects.create(
-        news=news,
-        author=author,
-        text='Старый комментарий',
-        created=now - timedelta(hours=2)
-    )
-    middle_comment = Comment.objects.create(
-        news=news,
-        author=reader,
-        text='Средний комментарий',
-        created=now - timedelta(hours=1)
-    )
-    new_comment = Comment.objects.create(
-        news=news,
-        author=author,
-        text='Новый комментарий',
-        created=now
-    )
-    url = reverse('news:detail', args=(news.id,))
-    response = client.get(url)
-    all_comments = list(response.context['news'].comment_set.all())
-    assert all_comments[0] == old_comment
-    assert all_comments[1] == middle_comment
-    assert all_comments[2] == new_comment
+def test_comments_order_on_news_detail_page(
+    client, news, multiple_comments, news_detail_url
+):
+    response = client.get(news_detail_url)
+    comments = list(response.context['news'].comment_set.all())
+    sorted_comments = sorted(comments, key=lambda c: c.created)
+    assert comments == sorted_comments
 
 
-@pytest.mark.django_db
-def test_anonymous_user_has_no_form(client, news):
-    url = reverse('news:detail', args=(news.id,))
-    response = client.get(url)
+def test_anonymous_user_has_no_form(client, news_detail_url):
+    response = client.get(news_detail_url)
     assert 'form' not in response.context
 
 
-@pytest.mark.django_db
-def test_authorized_user_has_form(client, news, author):
+def test_authorized_user_has_form(client, news_detail_url, author):
     client.force_login(author)
-    url = reverse('news:detail', args=(news.id,))
-    response = client.get(url)
+    response = client.get(news_detail_url)
     assert 'form' in response.context
     assert isinstance(response.context['form'], CommentForm)

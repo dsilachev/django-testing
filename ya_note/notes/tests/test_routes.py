@@ -8,9 +8,9 @@ class TestRoutes(BaseTestCase):
 
     def test_availability_for_pages(self):
         urls = [
-            (reverse('notes:home'), self.anonymous_client, HTTPStatus.OK),
-            (reverse('users:login'), self.anonymous_client, HTTPStatus.OK),
-            (reverse('users:signup'), self.anonymous_client, HTTPStatus.OK),
+            (self.NOTES_HOME_URL, self.anonymous_client, HTTPStatus.OK),
+            (self.USERS_LOGIN_URL, self.anonymous_client, HTTPStatus.OK),
+            (self.USERS_SIGNUP_URL, self.anonymous_client, HTTPStatus.OK),
 
             (self.NOTES_ADD_URL, self.not_author_client, HTTPStatus.OK),
             (self.NOTES_LIST_URL, self.not_author_client, HTTPStatus.OK),

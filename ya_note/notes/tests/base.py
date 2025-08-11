@@ -34,3 +34,6 @@ class BaseTestCase(TestCase):
         cls.NOTES_DELETE_URL = reverse('notes:delete', args=(cls.note.slug,))
         cls.NOTES_SUCCESS_URL = reverse('notes:success')
         cls.NOTES_DETAIL_URL = reverse('notes:detail', args=(cls.note.slug,))
+        cls.NOTES_HOME_URL = reverse('notes:home')
+        cls.USERS_LOGIN_URL = reverse('users:login')
+        cls.USERS_SIGNUP_URL = reverse('users:signup')

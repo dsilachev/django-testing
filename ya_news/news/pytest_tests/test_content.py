@@ -1,6 +1,5 @@
 import pytest
 from django.contrib.auth import get_user_model
-from django.urls import reverse
 from django.conf import settings
 
 from news.forms import CommentForm
@@ -8,16 +7,6 @@ from news.forms import CommentForm
 User = get_user_model()
 
 pytestmark = pytest.mark.django_db
-
-
-@pytest.fixture
-def home_url():
-    return reverse('news:home')
-
-
-@pytest.fixture
-def news_detail_url(news):
-    return reverse('news:detail', args=(news.id,))
 
 
 def test_news_count_on_home_page(client, multiple_news, home_url):

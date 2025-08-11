@@ -97,10 +97,10 @@ def news_detail_url(news):
 
 
 @pytest.fixture
-def comment_urls(comment):
-    news_url = reverse('news:detail', args=(comment.news.id,))
-    return {
-        'news_url': news_url,
-        'delete_url': reverse('news:delete', args=(comment.id,)),
-        'edit_url': reverse('news:edit', args=(comment.id,))
-    }
+def comment_delete_url(comment):
+    return reverse('news:delete', args=(comment.id,))
+
+
+@pytest.fixture
+def comment_edit_url(comment):
+    return reverse('news:edit', args=(comment.id,))

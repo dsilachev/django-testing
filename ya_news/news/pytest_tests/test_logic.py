@@ -7,6 +7,8 @@ from news.models import Comment
 
 pytestmark = pytest.mark.django_db
 
+NEW_DATA = {'text': 'Обновлённый комментарий'}
+
 
 def test_anonymous_user_cant_create_comment(
     client, news_detail_url, form_data
@@ -50,46 +52,36 @@ def test_author_can_delete_comment(
 def test_user_cant_delete_comment_of_another_user(
     reader_client, comment, comment_delete_url
 ):
-    old_text = comment.text
-    old_author = comment.author
-    old_news = comment.news
     response = reader_client.delete(comment_delete_url)
     comment.refresh_from_db()
     after = Comment.objects.get(pk=comment.pk)
     assert response.status_code == HTTPStatus.NOT_FOUND
     assert Comment.objects.count() == 1
-    assert after.text == old_text
-    assert after.author == old_author
-    assert after.news == old_news
+    assert after.text == comment.text
+    assert after.author == comment.author
+    assert after.news == comment.news
 
 
 def test_author_can_edit_comment(
     author_client, comment, comment_edit_url, news_detail_url
 ):
-    new_data = {'text': 'Обновлённый комментарий'}
-    old_author = comment.author
-    old_news = comment.news
-    response = author_client.post(comment_edit_url, data=new_data)
+    response = author_client.post(comment_edit_url, data=NEW_DATA)
     comment.refresh_from_db()
     after = Comment.objects.get(pk=comment.pk)
     assert response.status_code == HTTPStatus.FOUND
     assert response.url == f"{news_detail_url}#comments"
-    assert after.text == new_data['text']
-    assert after.author == old_author
-    assert after.news == old_news
+    assert after.text == NEW_DATA['text']
+    assert after.author == comment.author
+    assert after.news == comment.news
 
 
 def test_user_cant_edit_comment_of_another_user(
     reader_client, comment, comment_edit_url
 ):
-    new_data = {'text': 'Обновлённый комментарий'}
-    old_text = comment.text
-    old_author = comment.author
-    old_news = comment.news
-    response = reader_client.post(comment_edit_url, data=new_data)
+    response = reader_client.post(comment_edit_url, data=NEW_DATA)
     comment.refresh_from_db()
     after = Comment.objects.get(pk=comment.pk)
     assert response.status_code == HTTPStatus.NOT_FOUND
-    assert after.text == old_text
-    assert after.author == old_author
-    assert after.news == old_news
+    assert after.text == comment.text
+    assert after.author == comment.author
+    assert after.news == comment.news

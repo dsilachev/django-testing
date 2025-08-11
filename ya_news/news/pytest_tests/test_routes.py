@@ -10,6 +10,8 @@ NEWS_HOME_URL = lazy_fixture('home_url')
 NEWS_DETAIL_URL = lazy_fixture('news_detail_url')
 COMMENT_EDIT_URL = lazy_fixture('comment_edit_url')
 COMMENT_DELETE_URL = lazy_fixture('comment_delete_url')
+USERS_LOGIN_URL = lazy_fixture('users_login_url')
+USERS_SIGNUP_URL = lazy_fixture('users_signup_url')
 
 
 @pytest.mark.parametrize(
@@ -17,8 +19,8 @@ COMMENT_DELETE_URL = lazy_fixture('comment_delete_url')
     [
         (NEWS_HOME_URL, 'client', HTTPStatus.OK),
         (NEWS_DETAIL_URL, 'client', HTTPStatus.OK),
-        (reverse('users:login'), 'client', HTTPStatus.OK),
-        (reverse('users:signup'), 'client', HTTPStatus.OK),
+        (USERS_LOGIN_URL, 'client', HTTPStatus.OK),
+        (USERS_SIGNUP_URL, 'client', HTTPStatus.OK),
         (COMMENT_EDIT_URL, 'author_client', HTTPStatus.OK),
         (COMMENT_DELETE_URL, 'author_client', HTTPStatus.OK),
         (COMMENT_EDIT_URL, 'reader_client', HTTPStatus.NOT_FOUND),

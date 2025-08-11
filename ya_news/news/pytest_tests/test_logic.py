@@ -53,7 +53,6 @@ def test_user_cant_delete_comment_of_another_user(
     reader_client, comment, comment_delete_url
 ):
     response = reader_client.delete(comment_delete_url)
-    comment.refresh_from_db()
     after = Comment.objects.get(pk=comment.pk)
     assert response.status_code == HTTPStatus.NOT_FOUND
     assert Comment.objects.count() == 1
@@ -66,7 +65,6 @@ def test_author_can_edit_comment(
     author_client, comment, comment_edit_url, news_detail_url
 ):
     response = author_client.post(comment_edit_url, data=NEW_DATA)
-    comment.refresh_from_db()
     after = Comment.objects.get(pk=comment.pk)
     assert response.status_code == HTTPStatus.FOUND
     assert response.url == f"{news_detail_url}#comments"
@@ -79,7 +77,6 @@ def test_user_cant_edit_comment_of_another_user(
     reader_client, comment, comment_edit_url
 ):
     response = reader_client.post(comment_edit_url, data=NEW_DATA)
-    comment.refresh_from_db()
     after = Comment.objects.get(pk=comment.pk)
     assert response.status_code == HTTPStatus.NOT_FOUND
     assert after.text == comment.text
